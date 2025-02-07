@@ -27,7 +27,7 @@ if __name__ == "__main__":
     idx_to_char = index_to_char(char_to_idx)
 
     # Count bigrams and convert to probabilities
-    bigram_counts = count_bigrams(bigrams, char_to_idx)
+    bigram_counts = count_bigrams(bigrams, char_to_idx)#!!!!!
     bigram_probabilities = bigrams_count_to_probabilities(bigram_counts)
 
     num_names_to_generate = 10
@@ -42,6 +42,7 @@ if __name__ == "__main__":
         )
         names.append(new_name.capitalize())
         print(f"{new_name.capitalize()}: NLL = {neg_log_likelihood}")
+
 
     # Print mean negative log likelihood
     mean_neg_log_likelihood = calculate_neg_mean_log_likelihood(

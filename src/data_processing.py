@@ -2,10 +2,10 @@ from typing import List, Tuple, Dict
 import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
-
+#template\nlp\Scripts\activate
 
 def load_and_preprocess_data(
-    filepath: str, start_token: str = "!", end_token: str = "."
+    filepath: str, start_token: str = "<S>", end_token: str = "<E>"
 ) -> List[Tuple[str, str]]:
     """
     Load text from a file and preprocess them into bigrams with specified start and end tokens.
@@ -27,15 +27,28 @@ def load_and_preprocess_data(
         List[Tuple[str, str]]. A list of bigrams, where each bigram is a tuple of two characters.
     """
     with open(filepath, "r") as file:
-        lines: List[str] = file.read().splitlines()
+        lines: List[str] = file.read().splitlines() 
 
     # TODO
-    bigrams: List[Tuple[str, str]] = None
 
+    bigrams: List[Tuple[str, str]] = []
+    
+    for line in lines:
+        words = line.split()
+        for word in words:
+            if not word.isdecimal() and not word.replace(",", "").isdecimal(): #<S>maria<E>
+                word = word.lower()
+                word_bigrams = [(start_token,word[0])] 
+                for i in range(len(word)-1):
+                    word_bigrams.append((word[i],word[i+1]))
+                word_bigrams.append((word[-1], end_token))
+                bigrams.extend(word_bigrams)
+
+           
     return bigrams
 
 
-def char_to_index(alphabet: str, start_token: str, end_token: str) -> Dict[str, int]:
+def char_to_index(alphabet: str, start_token: str, end_token: str) -> Dict[str, int]: #QUÉ TOKENS INICIAL Y FINAL AY QUE PONER????? <S> O <, antes he puesto <a
     """
     Create a dictionary mapping each character in the alphabet to an index.
 
@@ -49,7 +62,10 @@ def char_to_index(alphabet: str, start_token: str, end_token: str) -> Dict[str, 
     """
     # Create a dictionary with start token at the beginning and end token at the end
     # TODO
-    char_to_idx: Dict[str, int] = None
+    char_to_idx: Dict[str, int] = {}
+    new_alphabet = start_token + alphabet + end_token
+    for i in range(len(new_alphabet)):
+        char_to_idx[new_alphabet[i]]= i
 
     return char_to_idx
 
@@ -66,7 +82,9 @@ def index_to_char(char_to_index: Dict[str, int]) -> Dict[int, str]:
     """
     # Reverse the char_to_index mapping
     # TODO
-    idx_to_char: Dict[int, str] = None
+    idx_to_char: Dict[int, str] = {}
+    
+    idx_to_char= {num: char for char, num in char_to_index.items()}
 
     return idx_to_char
 
@@ -93,10 +111,18 @@ def count_bigrams(
 
     # Initialize a 2D tensor for counting bigrams
     # TODO
-    bigram_counts: torch.Tensor = None
+    # bigram_counts: torch.Tensor = None???
+    N = len(char_to_idx)
+    bigram_counts = torch.zeros(N, N, dtype=torch.int32) #2D --> (1,2)  3D --> (1,2,3)
 
     # Iterate over each bigram and update the count in the tensor
     # TODO
+    for bigram in bigrams:
+        i, j = bigram
+        if i in char_to_idx and j in char_to_idx: #reviso si está en el diccionario
+            i_idx = char_to_idx[i]
+            j_idx = char_to_idx[j]
+            bigram_counts[i_idx, j_idx] += 1
 
     return bigram_counts
 
@@ -136,11 +162,12 @@ if __name__ == "__main__":
 
     # Create a mapping from characters to indices
     char_to_idx: Dict[str, int] = char_to_index(alphabet, start_token, end_token)
-
+  
     # Load and preprocess the data to get bigrams
     bigrams: List[Tuple[str, str]] = load_and_preprocess_data(
         file_path, start_token=start_token, end_token=end_token
     )
+   
 
     # Count the bigrams
     bigram_counts: torch.Tensor = count_bigrams(bigrams, char_to_idx)
